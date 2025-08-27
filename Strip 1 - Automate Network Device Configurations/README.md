@@ -114,7 +114,7 @@ flowchart TD
    python manage.py runserver
    ```
 
-   * Navigate to `http://127.0.0.1:8000/` to view results.
+   * Navigate to `http://127.0.0.1:8000/reports` to view results.
 
 ---
 
@@ -130,8 +130,6 @@ python -m venv venv
 source venv/bin/activate   # (Linux/Mac)
 venv\Scripts\activate      # (Windows)
 
-# Install dependencies
-pip install -r requirements.txt
 ```
 
 ---
