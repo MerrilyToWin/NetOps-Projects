@@ -1,0 +1,165 @@
+# 🔐 Network Compliance Automation
+
+## 📌 Overview
+This project is designed to **automate network device compliance checks** by:
+1. **Connecting to network devices** (Cisco sandbox or real infra).
+2. **Fetching and storing running configurations** in MongoDB.
+3. **Defining compliance rules** in a YAML file.
+4. **Checking compliance** against those rules.
+5. **Presenting results** in a simple Django web interface.
+
+The goal is to **help network engineers, security teams, and auditors** ensure that devices follow organizational and security standards (e.g., NTP, SNMP, banners).
+
+---
+
+## 🎯 Use Case
+- Enterprises often have **hundreds of network devices**.
+- Ensuring compliance manually is time-consuming.
+- With this project:
+  - Devices are **connected and inventoried**.
+  - Configurations are **fetched and archived** (for audits).
+  - **Compliance rules** are defined centrally in YAML.
+  - Deviations (e.g., missing NTP, insecure SNMP strings) are reported.
+- This project serves as a **lightweight compliance engine** for networks.
+
+---
+
+## 📂 Project Structure
+network-compliance-automation/
+│
+├── inventory/
+│ └── devices.json # Stores device info (hostname, IP, creds)
+│
+├── configs/
+│ └── fetched_configs.json # Stores fetched configs in MongoDB
+│
+├── rules/
+│ └── rules.yaml # Compliance rules
+│
+├── scripts/
+│ ├── fetch_config.py # Fetch configs from devices
+│ ├── config_find.py # Store configs in MongoDB
+│ └── compliance_check.py # Validate configs against rules
+│
+├── django_app/ # Django Web UI
+│ ├── settings.py
+│ ├── models.py
+│ ├── views.py
+│ └── templates/
+│
+└── README.md # This documentation
+
+yaml
+Copy code
+
+---
+
+## 🛠️ Setup & Installation
+
+### 1️⃣ Clone Repo
+```bash
+git clone https://github.com/yourusername/network-compliance-automation.git
+cd network-compliance-automation
+2️⃣ Install Dependencies
+bash
+Copy code
+pip install -r requirements.txt
+Dependencies include:
+
+netmiko → connect to devices
+
+pymongo → interact with MongoDB
+
+pyyaml → load YAML compliance rules
+
+django → web interface
+
+3️⃣ Setup MongoDB
+Start MongoDB locally or use MongoDB Atlas.
+
+Create collections:
+
+devices → stores inventory
+
+configs → stores running configs
+
+4️⃣ Add Devices
+Example devices.json entry:
+
+json
+Copy code
+{
+  "hostname": "csr1000v-1",
+  "ip": "10.10.20.48",
+  "vendor": "cisco",
+  "username": "developer",
+  "password": "C1sco12345"
+}
+5️⃣ Define Rules
+Example rules.yaml:
+
+yaml
+Copy code
+ntp:
+  description: "NTP server configured"
+  must_have:
+    - "ntp server"
+  must_not_have: []
+
+snmp:
+  description: "SNMP must not use default public strings"
+  must_have: []
+  must_not_have:
+    - "snmp-server community public"
+    - "snmp-server community private"
+
+banner:
+  description: "MOTD banner present"
+  must_have:
+    - "banner motd"
+  must_not_have: []
+6️⃣ Run Scripts
+Fetch config:
+
+bash
+Copy code
+python scripts/fetch_config.py
+Save to MongoDB:
+
+bash
+Copy code
+python scripts/config_find.py
+Check compliance:
+
+bash
+Copy code
+python scripts/compliance_check.py
+7️⃣ Django Web UI
+Run server:
+
+bash
+Copy code
+cd django_app
+python manage.py runserver
+Visit: http://127.0.0.1:8000/
+
+📊 Flow Diagram
+mermaid
+Copy code
+flowchart TD
+    A[Devices Inventory in MongoDB] -->|Fetch Configs| B[Fetch Config Script]
+    B -->|Store Running Configs| C[Configs Collection in MongoDB]
+    C -->|Apply Rules| D[Compliance Check Script]
+    D -->|Results| E[Django Web UI]
+    E -->|Reports| F[User/Engineer]
+🚀 Future Enhancements
+🔄 CI/CD Integration with GitHub Actions
+
+📡 Multi-vendor support (Juniper, Arista, etc.)
+
+📈 Compliance reporting dashboard with graphs
+
+🔔 Email/Slack alerts for non-compliance
+
+👨‍💻 Author
+Developed as part of AI-NetOps Automation Lab to showcase network compliance automation.
