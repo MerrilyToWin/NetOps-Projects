@@ -7,7 +7,7 @@ from netmiko import ConnectHandler, NetmikoTimeoutException, NetmikoAuthenticati
 from bson.objectid import ObjectId
 
 # =========== CONFIG - EDIT THESE ============
-MONGO_URI = "mongodb+srv://merwin:AmmaMerwin@storage.mazbk2j.mongodb.net/?retryWrites=true&w=majority&appName=Storage" # or your Atlas URI
+MONGO_URI = "mongodb+srv://merwin:<password>@storage.mazbk2j.mongodb.net/?retryWrites=true&w=majority&appName=Storage" # or your Atlas URI
 DB_NAME = "NETMIKO"
 DEVICES_COLL = "Storage"
 CONFIGS_COLL = "Configs"
