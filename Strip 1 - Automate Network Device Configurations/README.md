@@ -169,12 +169,4 @@ Checking compliance for R1...
 
 ## 👨‍💻 Contributors
 
-* **Your Name** (Project Developer)
-
----
-
-⚡ Now it’s ready to push into GitHub 🚀
-
----
-
-Do you want me to also generate the **requirements.txt** (dependencies) for you, so that this README becomes fully functional?
+* **Merwin Jaya Ganesh** (Project Developer)
