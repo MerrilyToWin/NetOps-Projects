@@ -1,0 +1,18 @@
+ntp:
+  description: "NTP server configured"
+  must_have:
+    - "ntp server"    
+  must_not_have: []
+
+snmp:
+  description: "SNMP must not use default public strings"
+  must_have: []
+  must_not_have:
+    - "snmp-server community public"
+    - "snmp-server community private"
+
+banner:
+  description: "MOTD banner present"
+  must_have:
+    - "banner motd"
+  must_not_have: []
