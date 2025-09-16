@@ -8,14 +8,14 @@
     - google.cloud
 
   vars:
-    gcp_project: "omega-metric-471701-u8"
+    gcp_project: "<IN GCP>"
     gcp_zone: "us-central1-a"
     gcp_vm_name: "netops-vm"
     gcp_machine_type: "e2-micro"
-    gcp_image: "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
-    gcp_service_account_file: "/mnt/c/Users/merwi/OneDrive/Desktop/NetOps-Projects/Strip2/ZeroTrust/gcp_key/gcp-netops-key.json"
-    ssh_private_key_file: "~/.ssh/netops_ssh"
-    ssh_public_key_file: "~/.ssh/netops_ssh.pub"
+    gcp_image: "IN GCP"
+    gcp_service_account_file: "<PATH>"
+    ssh_private_key_file: "<PATH>"
+    ssh_public_key_file: "<PATH>"
     ssh_user: "ubuntu"
 
   tasks:
