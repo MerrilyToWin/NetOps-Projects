@@ -1,4 +1,4 @@
-Zero-Touch Provisioning + Compliance
+# Zero-Touch Provisioning + Compliance
 📌 Introduction
 
 This project demonstrates an end-to-end Zero-Touch Provisioning (ZTP) and Compliance Validation System for Cisco LAN switches using:
@@ -15,6 +15,8 @@ Grafana — dashboards and reporting
 
 The system provisions baseline configuration, validates compliance, stores results centrally, and visualizes them in real-time.
 
+---
+
 🔧 Use Cases
 
 Automated LAN/WAN switch/router provisioning.
@@ -29,7 +31,9 @@ Alerts on non-compliance (email, Slack, Teams).
 
 Extensible to ACLs, routing protocols, QoS, etc.
 
-⚙️ Architecture
+---
+
+## ⚙️ Architecture
 ```
                 ┌─────────────────────────┐
                 │     GCP VM (Ubuntu)     │
@@ -65,8 +69,29 @@ Extensible to ACLs, routing protocols, QoS, etc.
                 │ - Alerts                 │
                 └─────────────────────────┘
 ```
-🚀 Setup Guide
-Phase 1 — Provision GCP VM & Dependencies
+---
+
+## Create SSH Key Pair & Connect
+```bash
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/gcp_key -C "ansible-control"
+ssh -i ~/.ssh/gcp_key <YOUR_USERNAME>@<EXTERNAL_IP>
+```
+
+If you used GCP Console to paste the public key, use the username from that line.
+
+---
+
+## Connect Cisco VPN (if needed)
+- Install OpenConnect:
+```bash
+sudo apt update && sudo apt install -y openconnect
+sudo openconnect --user=<VPN_USERNAME> <YOUR_VPN_HOST>
+```
+For persistent site-to-site IPsec, use **strongSwan** (consult your team).
+
+---
+
+## Phase 1 — Provision GCP VM & Dependencies
 
 Provision VM and install dependencies automatically:
 ```
@@ -83,7 +108,9 @@ Python packages: netmiko, ansible, pymongo, flask
 
 Base tools: git, curl, ufw
 
-Phase 2 — Provision LAN Switch with Ansible
+---
+
+## Phase 2 — Provision LAN Switch with Ansible
 
 inventory.yml
 ```
@@ -114,7 +141,9 @@ Syslog server
 
 VLAN 10 & 20
 
-Phase 3 — Compliance Checks
+---
+
+## Phase 3 — Compliance Checks
 
 Run compliance script:
 ```
@@ -138,7 +167,9 @@ python3 compliance_check.py
 
 Results are stored in MongoDB → ztp_project.compliance_results.
 
-Phase 4 — Flask API
+---
+
+## Phase 4 — Flask API
 
 Serve compliance data for Grafana:
 ```
@@ -149,7 +180,10 @@ Test API:
 ```
 curl http://127.0.0.1:5000/compliance
 ```
-Phase 5 — Grafana Setup
+
+---
+
+## Phase 5 — Grafana Setup
 
 Install plugin:
 ```
@@ -166,9 +200,11 @@ Add JSON API Data Source with URL:
 http://localhost:5000/compliance
 ```
 
+---
+
 ✅ Save & Test → OK.
 
-Phase 6 — SSH Tunnel (Access Grafana Locally)
+## Phase 6 — SSH Tunnel (Access Grafana Locally)
 ```
 ssh -L 3000:localhost:3000 -i ~/.ssh/netops_ssh ubuntu@<VM_IP>
 ```
@@ -177,7 +213,9 @@ Open in browser:
 ```
 http://localhost:3000
 ```
-Phase 7 — Automation with Cron
+---
+
+## Phase 7 — Automation with Cron
 
 Schedule compliance checks every 10 minutes:
 ```
@@ -188,7 +226,9 @@ crontab -e
 */10 * * * * /usr/bin/python3 /home/ubuntu/compliance_check.py
 ```
 
-🛠️ Troubleshooting
+---
+
+## 🛠️ Troubleshooting
 ```
 # Check MongoDB
 sudo systemctl status mongod
@@ -202,8 +242,9 @@ curl http://127.0.0.1:5000/compliance
 # Check ports
 sudo ss -tulpn | grep 3000
 ```
+---
 
-📂 Project Structure
+## 📂 Project Structure
 ```
 IN LOCAL SYSTEM
 ├─ create_gcp_and_dep.yml   (Provision VM + dependencies)
@@ -218,7 +259,10 @@ IN GCP VM
 ├─ export_json_api.py  (Flask API for Grafana)
 MongoDB + Grafana on VM   (Data + visualization)
 ```
-🚀 Next Steps
+
+---
+
+## 🚀 Next Steps
 
 Add more compliance checks (ACLs, routing, QoS).
 
