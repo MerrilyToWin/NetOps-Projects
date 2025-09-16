@@ -1,0 +1,9 @@
+all:
+  hosts:
+    lan_switch:
+      ansible_host: 10.10.20.40
+      ansible_user: admin
+      ansible_password: RG!_Yw200
+      ansible_connection: network_cli
+      ansible_network_os: ios
+

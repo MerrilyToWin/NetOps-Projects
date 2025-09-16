@@ -1,0 +1,38 @@
+- name: Zero-Touch Provisioning for LAN Switch
+  hosts: lan_switch
+  gather_facts: no
+  connection: network_cli
+
+  tasks:
+    - name: Set hostname
+      ios_config:
+        lines:
+          - hostname LAN-SWITCH
+
+    - name: Configure SNMP
+      ios_config:
+        lines:
+          - snmp-server community NETOPS RO
+
+    - name: Configure NTP server
+      ios_config:
+        lines:
+          - ntp server 10.10.20.100
+
+    - name: Configure Syslog server (if supported)
+      ios_config:
+        lines:
+          - logging 10.10.20.101
+      ignore_errors: yes
+
+    - name: Create VLAN 10
+      ios_config:
+        lines:
+          - name USERS
+        parents: vlan 10
+
+    - name: Create VLAN 20
+      ios_config:
+        lines:
+          - name SERVERS
+        parents: vlan 20
