@@ -91,6 +91,39 @@ For persistent site-to-site IPsec, use **strongSwan** (consult your team).
 
 ---
 
+## Steps to Get GCP Service Account JSON Key
+
+Go to Google Cloud Console
+```
+👉 https://console.cloud.google.com/
+```
+
+Select your project
+(the one you’re using, e.g., omega-metric-471701-u8).
+Enable Compute Engine API (if not already enabled):
+Navigation menu → APIs & Services → Library
+Search for Compute Engine API → Enable
+Create a Service Account
+Navigation menu → IAM & Admin → Service Accounts
+Click + CREATE SERVICE ACCOUNT
+Give it a name (e.g., netops-service-account)
+
+Assign a role:
+
+Minimum: Compute Admin (to create/manage VMs)
+Or Editor (broader permissions for testing)
+Generate a Key (JSON)
+After creating → Click the service account → Keys tab
+Click Add Key → Create new key → JSON
+A JSON file will be downloaded to your computer.
+
+Use it in your Ansible playbook
+Place the file in a secure location and reference it in create_gcp_and_dep.yml:
+```
+gcp_service_account_file: "/path/to/your-key.json"
+```
+---
+
 ## Phase 1 — Provision GCP VM & Dependencies
 
 Provision VM and install dependencies automatically:
@@ -101,11 +134,8 @@ ansible-playbook create_gcp_and_dep.yml
 This installs:
 
 MongoDB
-
 Grafana
-
 Python packages: netmiko, ansible, pymongo, flask
-
 Base tools: git, curl, ufw
 
 ---
@@ -132,13 +162,9 @@ ansible-playbook -i inventory.yml ztp_switch.yml
 Configures:
 
 Hostname
-
 SNMP community
-
 NTP server
-
 Syslog server
-
 VLAN 10 & 20
 
 ---
