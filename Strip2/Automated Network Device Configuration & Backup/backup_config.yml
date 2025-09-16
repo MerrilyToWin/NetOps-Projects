@@ -1,0 +1,39 @@
+---
+- name: Backup Router and Switch Configs
+  hosts: cisco_routers:cisco_switches
+  gather_facts: no
+  connection: network_cli
+  vars_files:
+    - creds.yml
+  vars:
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+
+  tasks:
+    - name: Set login credentials based on device type
+      set_fact:
+        ansible_user: "{{ iosxr_username if inventory_hostname in groups['cisco_routers'] else nxos_username }}"
+        ansible_password: "{{ iosxr_password if inventory_hostname in groups['cisco_routers'] else nxos_password }}"
+
+    - name: Get running configuration for routers
+      ios_command:
+        commands: show running-config
+      register: router_config
+      when: inventory_hostname in groups['cisco_routers']
+
+    - name: Get running configuration for switches
+      nxos_command:
+        commands: show running-config
+      register: switch_config
+      when: inventory_hostname in groups['cisco_switches']
+
+    - name: Save router config to local file
+      copy:
+        content: "{{ router_config.stdout[0] }}"
+        dest: "./backups/{{ inventory_hostname }}-running-config.txt"
+      when: inventory_hostname in groups['cisco_routers']
+
+    - name: Save switch config to local file
+      copy:
+        content: "{{ switch_config.stdout[0] }}"
+        dest: "./backups/{{ inventory_hostname }}-running-config.txt"
+      when: inventory_hostname in groups['cisco_switches']

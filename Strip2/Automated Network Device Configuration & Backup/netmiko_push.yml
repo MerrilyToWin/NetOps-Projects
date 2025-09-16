@@ -1,0 +1,40 @@
+---
+- name: Netmiko Config Push for Cisco Devices
+  hosts: all
+  gather_facts: no
+  collections:
+    - community.network
+  vars_files:
+    - creds.yml
+
+  tasks:
+
+    - name: Configure IOS-XR Router using Netmiko
+      when: inventory_hostname in groups['cisco_routers']
+      community.network.netmiko_config:
+        host: "{{ ansible_host }}"
+        username: "{{ router_username }}"
+        password: "{{ router_password }}"
+        authorize: yes
+        auth_pass: "{{ router_password }}"
+        platform: iosxr
+        config:
+          - hostname Router1
+          - interface Loopback0
+            description NetOps-Test
+            ip address 1.1.1.1 255.255.255.255
+
+    - name: Configure NX-OS Switch using Netmiko
+      when: inventory_hostname in groups['cisco_switches']
+      community.network.netmiko_config:
+        host: "{{ ansible_host }}"
+        username: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        authorize: yes
+        auth_pass: "{{ switch_password }}"
+        platform: nxos
+        config:
+          - hostname NetOps-Switch1
+          - vlan 10
+          - name VLAN10-Test
+

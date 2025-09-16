@@ -1,0 +1,50 @@
+---
+- name: Basic Config Deployment for Routers and Switches
+  hosts: cisco_routers:cisco_switches
+  gather_facts: no
+  connection: network_cli
+  vars_files:
+    - creds.yml
+
+  tasks:
+    - name: Set login credentials for IOS-XR
+      set_fact:
+        ansible_user: "{{ iosxr_username }}"
+        ansible_password: "{{ iosxr_password }}"
+      when: inventory_hostname in groups['cisco_routers']
+
+    - name: Set login credentials for NX-OS
+      set_fact:
+        ansible_user: "{{ nxos_username }}"
+        ansible_password: "{{ nxos_password }}"
+      when: inventory_hostname in groups['cisco_switches']
+
+    - name: Configure Router hostname
+      iosxr_config:
+        lines:
+          - hostname NetOps-Router1
+      when: inventory_hostname in groups['cisco_routers']
+
+    - name: Configure Loopback0 on Router
+      iosxr_config:
+        parents: interface Loopback0
+        lines:
+          - ipv4 address 192.168.100.1 255.255.255.0
+          - description Configured by Ansible
+          - no shutdown
+      when: inventory_hostname in groups['cisco_routers']
+
+    - name: Configure Switch hostname
+      nxos_config:
+        lines:
+          - hostname NetOps-Switch1
+      when: inventory_hostname in groups['cisco_switches']
+
+    - name: Create VLAN 10 on Switch
+      nxos_config:
+        parents: vlan 10
+        lines:
+          - name Ansible_VLAN10
+      when: inventory_hostname in groups['cisco_switches']
+
+

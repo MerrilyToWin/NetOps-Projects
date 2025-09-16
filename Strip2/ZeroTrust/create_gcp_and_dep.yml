@@ -1,0 +1,152 @@
+---
+- name: Provision GCP VM and install dependencies
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  collections:
+    - google.cloud
+
+  vars:
+    gcp_project: "omega-metric-471701-u8"
+    gcp_zone: "us-central1-a"
+    gcp_vm_name: "netops-vm"
+    gcp_machine_type: "e2-micro"
+    gcp_image: "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+    gcp_service_account_file: "/mnt/c/Users/merwi/OneDrive/Desktop/NetOps-Projects/Strip2/ZeroTrust/gcp_key/gcp-netops-key.json"
+    ssh_private_key_file: "~/.ssh/netops_ssh"
+    ssh_public_key_file: "~/.ssh/netops_ssh.pub"
+    ssh_user: "ubuntu"
+
+  tasks:
+    - name: Create GCP VM instance with SSH key
+      gcp_compute_instance:
+        name: "{{ gcp_vm_name }}"
+        machine_type: "{{ gcp_machine_type }}"
+        zone: "{{ gcp_zone }}"
+        disks:
+          - auto_delete: true
+            boot: true
+            initialize_params:
+              source_image: "{{ gcp_image }}"
+        network_interfaces:
+          - network:
+              name: default
+            access_configs:
+              - name: External NAT
+                type: ONE_TO_ONE_NAT
+        metadata:
+          ssh-keys: "{{ ssh_user }}:{{ lookup('file', ssh_public_key_file) }}"
+          enable-oslogin: "FALSE"
+        auth_kind: serviceaccount
+        service_account_file: "{{ gcp_service_account_file }}"
+        project: "{{ gcp_project }}"
+        state: present
+      register: created_vm
+
+    - name: Wait for SSH to become available
+      wait_for:
+        host: "{{ created_vm.networkInterfaces[0].accessConfigs[0].natIP }}"
+        port: 22
+        timeout: 300
+        state: started
+
+    - name: Add VM to inventory dynamically
+      add_host:
+        name: "{{ created_vm.networkInterfaces[0].accessConfigs[0].natIP }}"
+        ansible_user: "{{ ssh_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+        groups: gcp_vms
+
+- name: Install dependencies on Ubuntu VM
+  hosts: gcp_vms
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install base packages
+      apt:
+        name:
+          - python3-pip
+          - python3-dev
+          - git
+          - software-properties-common
+          - wget
+          - curl
+          - ufw
+        state: present
+
+    - name: Install MongoDB
+      apt_key:
+        url: https://www.mongodb.org/static/pgp/server-6.0.asc
+        state: present
+
+    - name: Add MongoDB repository
+      apt_repository:
+        repo: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse"
+        state: present
+        filename: "mongodb-org"
+
+    - name: Install MongoDB package
+      apt:
+        name: mongodb-org
+        state: present
+        update_cache: yes
+  
+    - name: Enable and start MongoDB
+      systemd:
+        name: mongod
+        enabled: yes
+        state: started
+
+    - name: Install Python packages
+      pip:
+        name:
+          - netmiko
+          - ansible
+          - pymongo
+          - dnspython
+          - matplotlib
+        state: latest
+
+    - name: Install Grafana
+      apt_key:
+        url: https://packages.grafana.com/gpg.key
+        state: present
+
+    - name: Add Grafana repository
+      apt_repository:
+        repo: "deb https://packages.grafana.com/oss/deb stable main"
+        state: present
+        filename: "grafana"
+
+    - name: Install Grafana package
+      apt:
+        name: grafana
+        state: present
+        update_cache: yes
+
+    - name: Enable and start Grafana
+      systemd:
+        name: grafana-server
+        enabled: yes
+        state: started
+
+    - name: Configure UFW - allow SSH and Grafana
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - 22
+        - 3000
+
+    - name: Ensure UFW is enabled
+      ufw:
+        state: enabled
+        policy: allow

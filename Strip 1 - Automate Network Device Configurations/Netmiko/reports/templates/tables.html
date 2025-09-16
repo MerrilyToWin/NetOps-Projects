@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Compliance Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Network Compliance Report</h1>
+    <table>
+        <tr>
+            <th>Hostname</th>
+            <th>Status</th>
+            <th>Issues</th>
+        </tr>
+        {% for item in results %}
+        <tr>
+            <td>{{ item.hostname }}</td>
+            <td>
+                {% if item.compliant %}
+                    <span class="pass">PASS</span>
+                {% else %}
+                    <span class="fail">FAIL</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if item.issues %}
+                    <ul>
+                    {% for issue in item.issues %}
+                        <li>{{ issue }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    None
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
