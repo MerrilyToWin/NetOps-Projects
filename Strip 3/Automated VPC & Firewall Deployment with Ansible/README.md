@@ -11,6 +11,8 @@ It’s a great starting point to learn **Infrastructure as Code (IaC)** with Ans
    - Create a project in the [Google Cloud Console](https://console.cloud.google.com/).  
    - Enable **Compute Engine API**.
 
+---
+
 2. **Service Account Key**  
    - Go to **IAM & Admin → Service Accounts**.  
    - Create a new service account with roles:
@@ -21,6 +23,8 @@ It’s a great starting point to learn **Infrastructure as Code (IaC)** with Ans
      ```yaml
      service_account_file: ~/path/to/service_account.json
      ```
+
+---
 
 3. **Windows + WSL Setup (if using Windows)**  
    Install Ubuntu on Windows Subsystem for Linux (WSL):  
