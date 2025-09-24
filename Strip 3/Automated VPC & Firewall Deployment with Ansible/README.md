@@ -113,6 +113,4 @@ This project is licensed under the MIT License.
 
 ---
 
-```
 👉 Do you want me to also include the **`gcp.yml` playbook code snippet** inside the README so that GitHub viewers can see the full example directly without opening the YAML file?
-```
