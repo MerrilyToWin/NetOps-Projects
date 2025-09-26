@@ -1,0 +1,4 @@
+---
+  - import_playbook: gcp_vpc.yml
+  - import_playbook: gcp_http_load_balancer.yml
+  

@@ -1,0 +1,59 @@
+- name: Destroy GCP Infrastructure
+  hosts: localhost
+  gather_facts: no
+  vars:
+    project_id: <project_id>
+    service_account_file: ~/path/to/json
+    zone: us-central1-a
+    region: us-central1
+
+  tasks:
+    # Delete Global IP
+    - name: Delete Global IP
+      google.cloud.gcp_compute_global_address:
+        name: lb-ip
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: absent
+
+    # Delete Firewalls
+    - name: Delete Firewalls
+      google.cloud.gcp_compute_firewall:
+        name: "{{ item }}"
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: absent
+      loop:
+        - allow-http
+        - allow-app-port
+        - allow-database
+        - allow-ssh-my-ip
+
+    - name: Delete Subnetworks
+      google.cloud.gcp_compute_subnetwork:
+        name: "{{ item.name }}"
+        network:
+          name: prod-vpc
+          project: "{{ project_id }}"
+        region: "{{ item.region }}"
+        ip_cidr_range: "{{ item.cidr }}"
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: absent
+      delegate_to: localhost
+      loop:
+        - { name: "subnet-frontend", region: "us-central1", cidr: "10.10.1.0/24" }
+        - { name: "subnet-backend", region: "us-central1", cidr: "10.20.1.0/24" }
+        - { name: "subnet-database", region: "us-central1", cidr: "10.30.1.0/24" }
+
+    # Delete VPC Network
+    - name: Delete VPC
+      google.cloud.gcp_compute_network:
+        name: prod-vpc
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: absent

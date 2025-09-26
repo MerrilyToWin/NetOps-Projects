@@ -1,0 +1,67 @@
+- name: Create VPC along with Subnet and Firwalls rules in GCP
+  hosts: localhost
+  gather_facts: no
+  vars:
+    project_id: <project_id>
+    service_account_file: ~/path/to/json
+
+  tasks:
+    - name: Create a VPC network
+      google.cloud.gcp_compute_network:
+        name: prod-vpc
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        auto_create_subnetworks: false
+        state: present
+      register: network
+
+    - name: create a subnetwork
+      google.cloud.gcp_compute_subnetwork:
+        name: "{{item.name}}"
+        region: "{{item.region}}"
+        network: "{{ network }}"
+        ip_cidr_range: "{{item.cidr}}"
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      loop: 
+        - { name: "subnet-frontend", region: "us-central1", cidr: "10.10.1.0/24" }
+        - { name: "subnet-backend", region: "us-central1", cidr: "10.20.1.0/24" }
+        - { name: "subnet-database", region: "us-central1", cidr: "10.30.1.0/24" }
+
+    - name: create a firewall
+      google.cloud.gcp_compute_firewall:
+        name: "{{item.name}}"
+        network: "{{ network }}"
+        allowed: "{{item.allowed}}"
+        source_ranges: "{{item.source_ranges}}"
+        project: "{{project_id}}"
+        auth_kind: serviceaccount
+        service_account_file: "{{service_account_file}}"
+        state: present 
+      loop:
+        - name: "allow-http"
+          allowed:
+            - ip_protocol: tcp
+              ports: ["80","443"]
+          source_ranges: ["0.0.0.0/0"]
+
+        - name: "allow-app-port"
+          allowed:
+            - ip_protocol: tcp
+              ports: ["8080"]
+          source_ranges: ["10.10.1.0/24"]
+        
+        - name: "allow-database"
+          allowed:
+            - ip_protocol: tcp
+              ports: ["3306"]
+          source_ranges: ["10.20.1.0/24"]
+
+        - name : "allow-ssh-my-ip"
+          allowed:
+            - ip_protocol: tcp
+              ports: ["22"]
+          source_ranges: ["192.168.1.5/32"]

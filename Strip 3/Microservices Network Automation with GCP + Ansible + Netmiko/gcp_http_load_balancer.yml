@@ -1,0 +1,141 @@
+- name: Create Instance Template, MIG, and Health Check for HTTP Load Balancer
+  hosts: localhost
+  gather_facts: no
+  vars:
+    project_id: <project_id>
+    service_account_file: ~/path/to/json
+    zone: us-central1-a
+    region: us-central1
+
+  tasks:
+    - name: Create an Instance Template
+      google.cloud.gcp_compute_instance_template:
+        name: http-template
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        properties:
+          machine_type: e2-micro
+          disks:
+            - auto_delete: true
+              boot: true
+              initialize_params:
+                source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts
+          network_interfaces:
+            - network: 
+                self_link: "projects/{{ project_id }}/global/networks/prod-vpc"
+              subnetwork: 
+                self_link: "projects/{{ project_id }}/regions/{{ region }}/subnetworks/subnet-frontend"
+              access_configs:
+                - name: External NAT
+                  type: ONE_TO_ONE_NAT
+          metadata:
+            startup-script: |
+              #!/bin/bash
+              apt-get update
+              apt-get install -y apache2
+              echo "Hello from $(hostname)" > /var/www/html/index.html
+      register: instancetemplate
+
+    - name: Create a Managed Instance Group (MIG)
+      google.cloud.gcp_compute_instance_group_manager:
+        name: http-mig
+        base_instance_name: http-instance
+        instance_template: "{{ instancetemplate}}"
+        target_size: 2
+        zone: "{{ zone }}"
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: mig
+
+    - name: create a autoscaler
+      google.cloud.gcp_compute_autoscaler:
+        name: test-autoscaler
+        zone: "{{zone}}"
+        target: "{{ mig }}"
+        autoscaling_policy:
+          min_num_replicas: 1
+          max_num_replicas: 5
+          cool_down_period_sec: 60
+          cpu_utilization:
+            utilization_target: 0.6
+        project: "{{project_id}}"
+        auth_kind: serviceaccount
+        service_account_file: "{{service_account_file}}"
+        state: present
+
+    - name: Create HTTP health check
+      google.cloud.gcp_compute_health_check:
+        name: http-health-check
+        type: HTTP
+        http_health_check:
+          port: 80
+          request_path: /
+        check_interval_sec: 5
+        timeout_sec: 5
+        healthy_threshold: 2
+        unhealthy_threshold: 2
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: healthcheck
+
+    - name: Create backend service
+      google.cloud.gcp_compute_backend_service:
+        name: http-backend-service
+        protocol: HTTP
+        load_balancing_scheme: EXTERNAL
+        backends:
+          - group: "{{ mig.instanceGroup }}"
+        health_checks:
+          - "{{ healthcheck.selfLink }}"
+        enable_cdn: true
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: backendservice
+
+    - name: Reserve global IP for LB
+      google.cloud.gcp_compute_global_address:
+        name: lb-ip
+        project: "{{ project_id }}"
+        auth_kind: serviceaccount
+        service_account_file: "{{ service_account_file }}"
+        state: present
+      register: globaladdress
+    
+    - name: create a URL map
+      google.cloud.gcp_compute_url_map:
+        name: test-object
+        default_service: "{{ backendservice }}"
+        project: "{{project_id}}"
+        auth_kind: serviceaccount
+        service_account_file: "{{service_account_file}}"
+        state: present
+      register: urlmap
+    
+    - name: create a target HTTP proxy
+      google.cloud.gcp_compute_target_http_proxy:
+        name: test-object
+        url_map: "{{urlmap}}"
+        project: "{{project_id}}"
+        auth_kind: serviceaccount
+        service_account_file: "{{service_account_file}}"
+        state: present
+      register: httpproxy
+    
+    - name: create a global forwarding rule
+      google.cloud.gcp_compute_global_forwarding_rule:
+        name: test-object
+        ip_address: "{{ globaladdress.address }}"
+        ip_protocol: TCP
+        port_range: 80-80
+        target: "{{ httpproxy.selfLink}}"
+        project: "{{project_id}}"
+        auth_kind: serviceaccount
+        service_account_file: "{{service_account_file}}"
+        state: present
