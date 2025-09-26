@@ -75,13 +75,13 @@ ansible-galaxy collection install google.cloud
 ---
 
 ## Project Structure
-.
+```
 ├── gcp_vpc.yml                # Create VPC, subnets, and firewalls
 ├── gcp_http_load_balancer.yml # Create HTTP Load Balancer and backend
 ├── gcp_automate.yml           # Master playbook to run both creation playbooks
 ├── gcp_delete_vpc.yml         # Delete all GCP resources
 └── README.md                  # Documentation
-
+```
 ---
 
 ## Usage
