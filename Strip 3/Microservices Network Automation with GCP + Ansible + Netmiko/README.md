@@ -63,6 +63,10 @@ The automation ensures consistent, repeatable deployment of GCP infrastructure.
    ```bash
    wsl --install -d Ubuntu
    ```
+   if already installed
+   ```
+   wsl -d ubuntu
+   ```
 ---
 
 4. **Install Ansible and Google Cloud Collection**
@@ -89,7 +93,7 @@ ansible-galaxy collection install google.cloud
 **Create Infrastructure**
 Run the master playbook to create all resources:
 ```
-ansible-playbook gcp_automate.yml -e "project_id=<YOUR_PROJECT_ID> service_account_file=~/path/to/service-account.json"
+ansible-playbook gcp_automate.yml
 ```
 This will:
 - Create VPC, subnets, and firewalls.
